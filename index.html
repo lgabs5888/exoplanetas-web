@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exoplanetas IA</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%23f2a541%22/%3E%3Ccircle cx=%2220%22 cy=%2215%22 r=%224%22 fill=%22%230e1630%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header class="cabecera">
+    <div class="marca">
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <h1>Exoplanetas IA</h1>
+        <p>Detección de exoplanetas en curvas de luz del telescopio Kepler</p>
+      </div>
+    </div>
+    <div class="conexion">
+      <label for="api-url">API</label>
+      <input id="api-url" type="url" spellcheck="false">
+      <button id="btn-conectar" class="btn secundario">Conectar</button>
+      <span id="estado-api" class="estado desconocido" title="Estado del servicio">Sin conexión</span>
+    </div>
+  </header>
+
+  <nav class="pestanas" role="tablist">
+    <button class="pestana activa" data-vista="predecir" role="tab">Predecir</button>
+    <button class="pestana" data-vista="historial" role="tab">Historial</button>
+    <button class="pestana" data-vista="metricas" role="tab">Métricas del modelo</button>
+    <button class="pestana" data-vista="entrenamiento" role="tab">Entrenamiento</button>
+  </nav>
+
+  <main>
+    <!-- PREDECIR -->
+    <section id="vista-predecir" class="vista activa">
+      <div class="tarjeta">
+        <h2>Clasificar estrellas</h2>
+        <p class="ayuda">Sube un CSV con las columnas <code>FLUX.1</code> a <code>FLUX.3197</code> (una fila por estrella).
+          Si incluye <code>LABEL</code>, se guarda como etiqueta real para comparar.</p>
+        <label class="zona-archivo" id="zona-prediccion">
+          <input type="file" id="archivo-prediccion" accept=".csv">
+          <span><strong>Elige un archivo CSV</strong> o arrástralo aquí</span>
+          <small id="nombre-prediccion"></small>
+        </label>
+        <div class="acciones">
+          <button id="btn-predecir" class="btn" disabled>Clasificar</button>
+          <span class="separador">o prueba con un ejemplo:</span>
+          <button class="btn secundario ejemplo" data-archivo="ejemplos/estrella_con_planeta.csv">Estrella con planeta</button>
+          <button class="btn secundario ejemplo" data-archivo="ejemplos/estrella_sin_planeta.csv">Estrella sin planeta</button>
+          <button class="btn secundario ejemplo" data-archivo="ejemplos/lote_10_estrellas.csv">Lote de 10 estrellas</button>
+        </div>
+      </div>
+      <div id="resultado-prediccion"></div>
+    </section>
+
+    <!-- HISTORIAL -->
+    <section id="vista-historial" class="vista">
+      <div class="tarjeta">
+        <div class="titulo-fila">
+          <h2>Historial de predicciones</h2>
+          <div class="acciones">
+            <label class="check"><input type="checkbox" id="solo-planeta"> Solo con planeta</label>
+            <button id="btn-actualizar-historial" class="btn secundario">Actualizar</button>
+          </div>
+        </div>
+        <div id="tabla-historial"></div>
+        <div class="paginacion">
+          <button id="pag-anterior" class="btn secundario">Anterior</button>
+          <span id="pag-info"></span>
+          <button id="pag-siguiente" class="btn secundario">Siguiente</button>
+        </div>
+      </div>
+      <div id="detalle-historial"></div>
+    </section>
+
+    <!-- MÉTRICAS -->
+    <section id="vista-metricas" class="vista">
+      <div id="contenido-metricas"></div>
+      <div class="tarjeta">
+        <div class="titulo-fila">
+          <h2>Versiones del modelo</h2>
+          <button id="btn-actualizar-versiones" class="btn secundario">Actualizar</button>
+        </div>
+        <div id="tabla-versiones"></div>
+      </div>
+    </section>
+
+    <!-- ENTRENAMIENTO -->
+    <section id="vista-entrenamiento" class="vista">
+      <div class="dos-columnas">
+        <div class="tarjeta">
+          <h2>1. Enviar archivo de entrenamiento</h2>
+          <p class="ayuda">CSV con el formato de <code>exoTrain.csv</code>: columna <code>LABEL</code> (2 = con planeta, 1 = sin planeta)
+            y <code>FLUX.1</code> a <code>FLUX.3197</code>. Necesita al menos 5 estrellas con planeta.</p>
+          <label class="zona-archivo">
+            <input type="file" id="archivo-entrenamiento" accept=".csv">
+            <span><strong>Elige el archivo de entrenamiento</strong></span>
+            <small id="nombre-entrenamiento"></small>
+          </label>
+          <div class="acciones"><button id="btn-subir" class="btn" disabled>Enviar archivo</button></div>
+          <div id="msg-subida"></div>
+        </div>
+        <div class="tarjeta">
+          <h2>2. Solicitar reentrenamiento</h2>
+          <p class="ayuda">Entrena una nueva versión de XGBoost con validación cruzada de 5 pliegues. Tarda unos minutos.</p>
+          <label for="sel-archivo">Archivo</label>
+          <select id="sel-archivo"></select>
+          <label class="check"><input type="checkbox" id="chk-activar" checked> Activar la nueva versión al terminar</label>
+          <div class="acciones"><button id="btn-reentrenar" class="btn">Reentrenar modelo</button></div>
+          <div id="estado-reentrenamiento"></div>
+        </div>
+      </div>
+      <div class="tarjeta">
+        <h2>Archivos enviados</h2>
+        <div id="tabla-archivos"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="aviso" class="aviso" role="status"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/graficos.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
